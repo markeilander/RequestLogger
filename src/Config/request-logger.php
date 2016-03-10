@@ -38,6 +38,17 @@ return array(
 		'except'   => 'minimal'
 	],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Only
+    |--------------------------------------------------------------------------
+    |
+    | Only log request that start with
+    */
+    'only' => [
+	   'api/*'
+    ],
+
 	/*
     |--------------------------------------------------------------------------
     | Except
@@ -57,6 +68,6 @@ return array(
     | The url's that wil be handled by the except formatter
     */
     'except-format' => [
-		'api/*',
+
 	],
 );

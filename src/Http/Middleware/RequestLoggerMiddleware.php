@@ -12,6 +12,10 @@ class RequestLoggerMiddleware
 {
     use DispatchesJobs;
 
+    private $exludedStatus = [
+        404
+    ];
+
     /**
      * Handle an incoming request.
      *
@@ -33,19 +37,59 @@ class RequestLoggerMiddleware
      */
     public function terminate(Request $request, Response $response)
     {
-        if (config('request-logger.log.enabled', false) && $this->shouldPassThrough($request, config('request-logger.except'))) {
+        if (config('request-logger.log.enabled', false) && $this->shouldLog($request)) {
             // run job
-            $this->dispatch(new RequestLogger($request, $response, $this->time(), $this->format($request)));
+            $this->dispatch(new RequestLogger($this->format($request, $response)));
         }
     }
 
     /**
-     * Determine if the request has a URI that should pass through CSRF verification.
+     * Determine if the request has a URI that should be logged.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return bool
      */
-    protected function shouldPassThrough($request, $excepts)
+    protected function shouldLog($request)
+    {
+        $only = config('request-logger.only');
+        $except = config('request-logger.except');
+
+        // first blacklist
+        if ($this->requestIs($except, $request)) {
+            return false;
+        }
+
+        // then whitelist
+        if ($this->requestIs($only, $request)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function requestIs($list, $request)
+    {
+        if (is_array($list)) {
+            foreach ($list as $except) {
+                if ($except !== '/') {
+                    $except = trim($except, '/');
+                }
+
+                if ($request->is($except)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Determine if the request has a URI that should not be logger.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    protected function shouldNotLog($request, $excepts)
     {
         foreach ($excepts as $except) {
             if ($except !== '/') {
@@ -53,11 +97,11 @@ class RequestLoggerMiddleware
             }
 
             if ($request->is($except)) {
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     /**
@@ -92,12 +136,36 @@ class RequestLoggerMiddleware
     /**
      * Determine which formatter to use
      */
-    private function format($request)
+    private function format($request, $response)
     {
         $formatter = config('request-logger.format.default');
         if ($this->shouldFormatAsExcept($request, config('request-logger.except-format'))) {
             $formatter = config('request-logger.format.except');
         }
-        return config('request-logger.log.format.'.$formatter);
+
+        $replacements = [
+            'status'   => $response->status(),
+            'content'  => $response->content(),
+            'method'   => $request->method(),
+            'full-url' => $request->fullUrl(),
+            'time'     => round($this->time() * 1000, 0) . ' ms'
+        ];
+        return $this->formatter($replacements, config('request-logger.log.format.'.$formatter));
+    }
+
+    /**
+     * Formar log
+     *
+     * @param  array $replacements
+     * @return bool
+     */
+    private function formatter($replacements, $format)
+    {
+        foreach($replacements AS $key => $value)
+        {
+        	$format = str_replace('{'.$key.'}', $value, $format);
+        }
+
+        return $format;
     }
 }

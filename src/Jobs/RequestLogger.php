@@ -15,9 +15,6 @@ class RequestLogger extends Job implements SelfHandling, ShouldQueue
 {
     use InteractsWithQueue, SerializesModels;
 
-    private $request;
-    private $response;
-    private $time;
     private $format;
 
     /**
@@ -25,11 +22,8 @@ class RequestLogger extends Job implements SelfHandling, ShouldQueue
      *
      * @return void
      */
-    public function __construct(Request $request, Response $response, $time, $format)
+    public function __construct($format)
     {
-        $this->request = $request;
-        $this->response = $response;
-        $this->time = $time;
         $this->format = $format;
     }
 
@@ -40,29 +34,6 @@ class RequestLogger extends Job implements SelfHandling, ShouldQueue
      */
     public function handle()
     {
-        $replacements = [
-            'status'   => $this->response->status(),
-            'content'  => $this->response->content(),
-            'method'   => $this->request->method(),
-            'full-url' => $this->request->fullUrl(),
-            'time'     => round($this->time * 1000, 0) . ' ms'
-        ];
-        Log::info($this->formatter($replacements));
-    }
-
-    /**
-     * Formar log
-     *
-     * @param  array $replacements
-     * @return bool
-     */
-    private function formatter($replacements)
-    {
-        foreach($replacements AS $key => $value)
-        {
-        	$this->format = str_replace('{'.$key.'}', $value, $this->format);
-        }
-
-        return $this->format;
+        Log::info($this->format);
     }
 }
