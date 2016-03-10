@@ -1,7 +1,7 @@
 {
-  "name": "eilander/gateway",
-  "description": "Laravel 5 gateway generator package.",
-  "keywords": ["laravel", "gateway", "fractal" , "laravel5"],
+  "name": "eilander/requestlogger",
+  "description": "Laravel 5 request logger package.",
+  "keywords": ["laravel", "laravel5"],
   "license": "MIT",
   "authors": [
     {
@@ -15,7 +15,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Eilander\\Gateway\\": "src/"
+      "Eilander\\RequestLogger\\": "src/"
     }
   }
 }

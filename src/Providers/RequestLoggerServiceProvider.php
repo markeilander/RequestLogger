@@ -1,4 +1,4 @@
-<?php namespace Eilander\Api\Providers;
+<?php namespace Eilander\RequestLogger\Providers;
 
 use Illuminate\Http\Response;
 use Illuminate\Support\ServiceProvider;
@@ -34,10 +34,9 @@ class RequestLoggerServiceProvider extends ServiceProvider {
      */
     public function register()
     {
-        // add middleware 
+        // add middleware
         $kernel = $this->app->make('Illuminate\Contracts\Http\Kernel');
         $kernel->prependMiddleware(\Eilander\RequestLogger\Http\Middleware\RequestLoggerMiddleware::class);
-        
     }
 
 }

@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace  Eilander\RequestLogger\Http\Middleware;
 
@@ -8,7 +8,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Eilander\RequestLogger\Jobs\RequestLogger;
 use Closure;
 
-class RequestLoggerMiddleware {
+class RequestLoggerMiddleware
+{
+    use DispatchesJobs;
 
     /**
      * Handle an incoming request.
@@ -22,7 +24,7 @@ class RequestLoggerMiddleware {
         return $next($request);
     }
 
-    /** 
+    /**
      * Perform any final actions for the request lifecycle.
      *
      * @param \Illuminate\Http\Request $request
@@ -31,9 +33,71 @@ class RequestLoggerMiddleware {
      */
     public function terminate(Request $request, Response $response)
     {
-        if (config('request-logger.log.enabled', false)) {
-            $time = microtime(true) - LARAVEL_START;
-            $this->dispatch(new RequestLogger($request, $response, $time));
+        if (config('request-logger.log.enabled', false) && $this->shouldPassThrough($request, config('request-logger.except'))) {
+            // run job
+            $this->dispatch(new RequestLogger($request, $response, $this->time(), $this->format($request)));
         }
+    }
+
+    /**
+     * Determine if the request has a URI that should pass through CSRF verification.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    protected function shouldPassThrough($request, $excepts)
+    {
+        foreach ($excepts as $except) {
+            if ($except !== '/') {
+                $except = trim($except, '/');
+            }
+
+            if ($request->is($except)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine if the request has a URI that should pass through CSRF verification.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    private function shouldFormatAsExcept($request, $exceptFormat)
+    {
+        foreach ($exceptFormat as $except) {
+            if ($except !== '/') {
+                $except = trim($except, '/');
+            }
+
+            if ($request->is($except)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine wthe time spend
+     */
+    private function time()
+    {
+       return microtime(true) - LARAVEL_START;
+    }
+
+    /**
+     * Determine which formatter to use
+     */
+    private function format($request)
+    {
+        $formatter = config('request-logger.format.default');
+        if ($this->shouldFormatAsExcept($request, config('request-logger.except-format'))) {
+            $formatter = config('request-logger.format.except');
+        }
+        return config('request-logger.log.format.'.$formatter);
     }
 }
