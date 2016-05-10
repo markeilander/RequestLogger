@@ -163,7 +163,7 @@ class RequestLoggerMiddleware
             'status'   => $response->status(),
             'content'  => $response->content(),
             'method'   => $request->method(),
-            'body'     => $request->all(),
+            'body'     => json_encode($request->all()),
             'full-url' => $request->fullUrl(),
             'time'     => round($this->time() * 1000, 0) . ' ms'
         ];
