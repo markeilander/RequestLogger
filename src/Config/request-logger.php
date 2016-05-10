@@ -12,8 +12,9 @@ return array(
     | {method}: The method used (GET/POST/PUT/DELETE)
     | {time}: Time in ms
     | {status}: status code (eg: 200, 404, etc)
+    | {body}: The body send with the request
     | {full-url}: The full url that is called
-    | {content}: The conten that is returned bij the request
+    | {content}: The content that is returned bij the request
     */
 	'log' => [
 		'enabled' => env('LOG_REQUESTS', false),
@@ -37,6 +38,16 @@ return array(
 		'default' => 'full',
 		'except'   => 'minimal'
 	],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    |
+    */
+    'methods' => [
+        'POST', 'GET', 'PUT', 'DELETE'
+    ],
 
     /*
     |--------------------------------------------------------------------------

@@ -53,6 +53,7 @@ class RequestLoggerMiddleware
     {
         $only = config('request-logger.only');
         $except = config('request-logger.except');
+        $methods = config('request-logger.methods');
 
         // first blacklist
         if ($this->requestIs($except, $request)) {
@@ -61,6 +62,11 @@ class RequestLoggerMiddleware
 
         // then whitelist
         if ($this->requestIs($only, $request)) {
+            return true;
+        }
+
+        // methods
+        if ($this->requestIsOfMethod($methods, $request)) {
             return true;
         }
 
@@ -78,6 +84,16 @@ class RequestLoggerMiddleware
                 if ($request->is($except)) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+     private function requestIsOfMethod($list, $request)
+    {
+        if (is_array($list)) {
+            if (in_array($request->method(), $list)) {
+                return true;
             }
         }
         return false;
@@ -147,6 +163,7 @@ class RequestLoggerMiddleware
             'status'   => $response->status(),
             'content'  => $response->content(),
             'method'   => $request->method(),
+            'body'     => $request->all(),
             'full-url' => $request->fullUrl(),
             'time'     => round($this->time() * 1000, 0) . ' ms'
         ];
