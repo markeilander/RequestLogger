@@ -62,12 +62,10 @@ class RequestLoggerMiddleware
 
         // then whitelist
         if ($this->requestIs($only, $request)) {
-            return true;
-        }
-
-        // methods
-        if ($this->requestIsOfMethod($methods, $request)) {
-            return true;
+            // methods
+            if ($this->requestIsOfMethod($methods, $request)) {
+                return true;
+            }
         }
 
         return false;
